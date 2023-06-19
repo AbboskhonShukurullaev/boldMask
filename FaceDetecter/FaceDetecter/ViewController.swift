@@ -10,6 +10,7 @@ import ARKit
 import SceneKit
 import Vision
 import CoreImage
+import Photos
 
 
 struct ForeheadPoints {
@@ -53,6 +54,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         return imageView
     }()
+    
+    private lazy var actionButton: UIButton = {
+        let button = UIButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
+        button.backgroundColor = .black
+        
+        return button
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -78,9 +88,47 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         hairNode = createHairNode()
     }
     
+    @objc private func buttonTapped() {
+        let snapshot = sceneView.snapshot()
+        saveImageToPhotoLibrary(image: snapshot)
+    }
+    
+    func saveImageToPhotoLibrary(image: UIImage) {
+        // First, we need to check for the photo library permission
+        let status = PHPhotoLibrary.authorizationStatus()
+        if (status == PHAuthorizationStatus.authorized) {
+            // Access has been granted.
+            saveImageToGallery(image: image)
+        }
+        else if (status == PHAuthorizationStatus.denied) {
+            // Access has been denied.
+            print("Access to photo library is denied.")
+        }
+        else if (status == PHAuthorizationStatus.notDetermined) {
+            // Access has not been determined.
+            PHPhotoLibrary.requestAuthorization({ (newStatus) in
+                if (newStatus == PHAuthorizationStatus.authorized) {
+                    self.saveImageToGallery(image: image)
+                }
+                else {
+                    print("Access to photo library is not determined.")
+                }
+            })
+        }
+        else if (status == PHAuthorizationStatus.restricted) {
+            // Restricted access - normally won't happen.
+            print("Access to photo library is restricted.")
+        }
+    }
+    
+    func saveImageToGallery(image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+    }
+    
     private func setupViews() {
         view.addSubview(sceneView)
         view.addSubview(imageView)
+        view.addSubview(actionButton)
     }
     
     private func setupConstraints() {
@@ -94,7 +142,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             imageView.topAnchor.constraint(equalTo: sceneView.bottomAnchor),
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            imageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+            
+            actionButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 0),
+            actionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            actionButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
+            actionButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            
         ])
     }
     
