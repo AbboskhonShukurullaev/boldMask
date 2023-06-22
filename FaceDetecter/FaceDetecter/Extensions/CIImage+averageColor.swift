@@ -8,15 +8,15 @@
 import UIKit
 
 extension CIImage {
-    func averageColor() -> UIColor? {
+    func averageColor() -> UIColor {
         let extentVector = CIVector(x: extent.origin.x, y: extent.origin.y, z: extent.size.width, w: extent.size.height)
 
         guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: self, kCIInputExtentKey: extentVector]) else {
-            return nil
+            return UIColor.clear
         }
 
         guard let outputImage = filter.outputImage else {
-            return nil
+            return UIColor.clear
         }
 
         var bitmap = [UInt8](repeating: 0, count: 4)

@@ -13,26 +13,14 @@ import CoreImage
 import Photos
 
 
-struct ForeheadPoints {
-    let center: UIColor?
-    let left1: UIColor?
-    let left2: UIColor?
-    let left3: UIColor?
-    let left4: UIColor?
-    let right1: UIColor?
-    let right2: UIColor?
-    let right3: UIColor?
-    let right4: UIColor?
-}
+class ViewController: UIViewController {
 
-class ViewController: UIViewController, ARSCNViewDelegate {
-
-    var backgroundNode:SCNNode?
     var hairNode: SCNNode?
     
     var lastUpdated: Date?
     
-    private let context = CIContext()
+    var hairNodes: [String] = []
+    
 
     private let sceneView: ARSCNView = {
         let sceneView = ARSCNView()
@@ -93,38 +81,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         saveImageToPhotoLibrary(image: snapshot)
     }
     
-    func saveImageToPhotoLibrary(image: UIImage) {
-        // First, we need to check for the photo library permission
-        let status = PHPhotoLibrary.authorizationStatus()
-        if (status == PHAuthorizationStatus.authorized) {
-            // Access has been granted.
-            saveImageToGallery(image: image)
-        }
-        else if (status == PHAuthorizationStatus.denied) {
-            // Access has been denied.
-            print("Access to photo library is denied.")
-        }
-        else if (status == PHAuthorizationStatus.notDetermined) {
-            // Access has not been determined.
-            PHPhotoLibrary.requestAuthorization({ (newStatus) in
-                if (newStatus == PHAuthorizationStatus.authorized) {
-                    self.saveImageToGallery(image: image)
-                }
-                else {
-                    print("Access to photo library is not determined.")
-                }
-            })
-        }
-        else if (status == PHAuthorizationStatus.restricted) {
-            // Restricted access - normally won't happen.
-            print("Access to photo library is restricted.")
-        }
-    }
-    
-    func saveImageToGallery(image: UIImage) {
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-    }
-    
     private func setupViews() {
         view.addSubview(sceneView)
         view.addSubview(imageView)
@@ -151,26 +107,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             
         ])
     }
-    
-    private func createHairNode() -> SCNNode {
-        guard let hairScene = SCNScene(named: "Phase_1.dae") else {
-            print("Failed to load hair model")
-            return SCNNode()
-        }
-        
-        let hairNode = SCNNode()
-        for childNode in hairScene.rootNode.childNodes {
-            hairNode.addChildNode(childNode)
-        }
-        
-        for material in hairNode.geometry?.materials ?? [] {
-            material.readsFromDepthBuffer = false
-        }
-        
-        return hairNode
-    }
-    
-    
+}
+
+//MARK: - ARKit Mask Logic
+extension ViewController: ARSCNViewDelegate {
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         // Check if a face is being tracked
         guard let faceAnchor = anchor as? ARFaceAnchor else { return }
@@ -193,74 +133,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
             // Get the average skin color from the camera image
             if let pixelBuffer = sceneView.session.currentFrame?.capturedImage {
-                let (centerColor, leftColor1, leftColor2, leftColor3, leftColor4, leftColor5, rightColor1, rightColor2, rightColor3, rightColor4, rightColor5) = getAverageSkinColor(from: pixelBuffer)
-
-                // Create new materials with different colors
-                let topMaterial = SCNMaterial()
-                topMaterial.diffuse.contents = centerColor
-
-                let leftMaterial1 = SCNMaterial()
-                leftMaterial1.diffuse.contents = leftColor1
                 
-                let leftMaterial2 = SCNMaterial()
-                leftMaterial2.diffuse.contents = leftColor2
-                
-                let leftMaterial3 = SCNMaterial()
-                leftMaterial3.diffuse.contents = leftColor3
-                
-                let leftMaterial4 = SCNMaterial()
-                leftMaterial4.diffuse.contents = leftColor4
-                
-                let leftMaterial5 = SCNMaterial()
-                leftMaterial5.diffuse.contents = leftColor5
-
-                let rightMaterial1 = SCNMaterial()
-                rightMaterial1.diffuse.contents = rightColor1
-                
-                let rightMaterial2 = SCNMaterial()
-                rightMaterial2.diffuse.contents = rightColor2
-                
-                let rightMaterial3 = SCNMaterial()
-                rightMaterial3.diffuse.contents = rightColor3
-                
-                let rightMaterial4 = SCNMaterial()
-                rightMaterial4.diffuse.contents = rightColor4
-                
-                let rightMaterial5 = SCNMaterial()
-                rightMaterial5.diffuse.contents = rightColor5
-
-                let topNode = hairNode.childNode(withName: "Top_phase1-001", recursively: true)
-                topNode?.geometry?.firstMaterial = topMaterial
-
-                let leftNode1 = hairNode.childNode(withName: "Lob_left_phase1-1", recursively: true)
-                leftNode1?.geometry?.firstMaterial = leftMaterial1
-                
-                let leftNode2 = hairNode.childNode(withName: "Lob_left_phase1-2", recursively: true)
-                leftNode2?.geometry?.firstMaterial = leftMaterial2
-                
-                let leftNode3 = hairNode.childNode(withName: "Lob_left_phase1-3", recursively: true)
-                leftNode3?.geometry?.firstMaterial = leftMaterial3
-                
-                let leftNode4 = hairNode.childNode(withName: "Lob_left_phase1-4", recursively: true)
-                leftNode4?.geometry?.firstMaterial = leftMaterial4
-                
-                let leftNode5 = hairNode.childNode(withName: "Lob_left_phase1-5", recursively: true)
-                leftNode5?.geometry?.firstMaterial = leftMaterial5
-
-                let rightNode1 = hairNode.childNode(withName: "Lob_right_phase1-1", recursively: true)
-                rightNode1?.geometry?.firstMaterial = rightMaterial1
-                
-                let rightNode2 = hairNode.childNode(withName: "Lob_right_phase1-2", recursively: true)
-                rightNode2?.geometry?.firstMaterial = rightMaterial2
-                
-                let rightNode3 = hairNode.childNode(withName: "Lob_right_phase1-3", recursively: true)
-                rightNode3?.geometry?.firstMaterial = rightMaterial3
-                
-                let rightNode4 = hairNode.childNode(withName: "Lob_right_phase1-4", recursively: true)
-                rightNode4?.geometry?.firstMaterial = rightMaterial4
-                
-                let rightNode5 = hairNode.childNode(withName: "Lob_right_phase1-5", recursively: true)
-                rightNode5?.geometry?.firstMaterial = rightMaterial5
+                drawMaskSegments(from: pixelBuffer, for: hairNode)
 
                 sceneView.scene.rootNode.addChildNode(hairNode)
             }
@@ -270,8 +144,78 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
+    private func createHairNode() -> SCNNode {
+        guard let hairScene = SCNScene(named: "Phase_1.dae") else {
+            print("Failed to load hair model")
+            return SCNNode()
+        }
+        
+        let hairNode = SCNNode()
+        for child in hairScene.rootNode.childNodes {
+            let copy = child.clone() // Deep copy of the node
+            hairNode.addChildNode(copy)
+        }
+        
+        // Make sure the node isn't empty before manipulating its geometry
+        guard !hairNode.childNodes.isEmpty else {
+            return hairNode
+        }
+
+        // Iterate over every child node
+        hairNode.enumerateChildNodes { (node, stop) in
+            if let geometry = node.geometry {
+                geometry.materials.forEach { material in
+                    material.readsFromDepthBuffer = false
+                }
+                hairNodes.append(node.name ?? "Unnamed")
+            }
+        }
+
+        return hairNode
+    }
+
+    private func drawMaskSegments(from pixelBuffer: CVPixelBuffer, for hairNode: SCNNode) {
+        let foreheadColors = getAverageSkinColor(from: pixelBuffer)
+        
+        for forehead in Forehead.allCases {
+            if hairNodes.contains(forehead.rawValue) {
+                if let matchingNode = hairNode.childNode(withName: forehead.rawValue, recursively: true) {
+                    let color: UIColor
+                    switch forehead {
+                    case .top:
+                        color = foreheadColors.center
+                    case .left1:
+                        color = foreheadColors.left1
+                    case .left2:
+                        color = foreheadColors.left2
+                    case .left3:
+                        color = foreheadColors.left3
+                    case .left4:
+                        color = foreheadColors.left4
+                    case .left5:
+                        color = foreheadColors.left5
+                    case .right1:
+                        color = foreheadColors.right1
+                    case .right2:
+                        color = foreheadColors.right2
+                    case .right3:
+                        color = foreheadColors.right3
+                    case .right4:
+                        color = foreheadColors.right4
+                    case .right5:
+                        color = foreheadColors.right5
+                    }
+                    matchingNode.geometry?.firstMaterial?.diffuse.contents = color
+                } else {
+                    print("Node with name \(forehead.rawValue) found, but not located in the 3D model.")
+                }
+            } else {
+                print("\(forehead.rawValue) not found in hairNodes")
+            }
+        }
+    }
     
-    func getAverageSkinColor(from pixelBuffer: CVPixelBuffer) -> (UIColor?, UIColor?, UIColor?, UIColor?, UIColor?, UIColor?, UIColor?, UIColor?, UIColor?, UIColor?, UIColor?) {
+    private func getAverageSkinColor(from pixelBuffer: CVPixelBuffer) -> (ForeheadColor) {
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
 
         let faceDetectionRequest = VNDetectFaceRectanglesRequest()
@@ -281,7 +225,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
         guard let results = faceDetectionRequest.results,
                 let firstFace = results.first else {
-            return (nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+            return ForeheadColor(center: UIColor.clear, left1: UIColor.clear, left2: UIColor.clear, left3: UIColor.clear, left4: UIColor.clear, left5: UIColor.clear, right1: UIColor.clear, right2: UIColor.clear, right3: UIColor.clear, right4: UIColor.clear, right5: UIColor.clear)
         }
         
         let faceBounds = CGRect(x: firstFace.boundingBox.origin.x * ciImage.extent.size.width,
@@ -304,62 +248,62 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         let leftBounds1 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 8),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 7),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds2 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 16),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 14),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds3 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 24),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 21),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds4 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 32),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 28),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds5 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 40),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 35),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         
         let rightBounds1 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 8),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 7),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds2 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 16),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 14),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds3 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 24),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 21),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds4 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 32),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 28),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds5 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 40),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 35),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
@@ -395,10 +339,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let rightAverageColor4 = rightForeheadCiImage4.averageColor()
         let rightAverageColor5 = rightForeheadCiImage5.averageColor()
 
-        return (centerAverageColor, leftAverageColor1, leftAverageColor2, leftAverageColor3, leftAverageColor4, leftAverageColor5, rightAverageColor1, rightAverageColor2, rightAverageColor3, rightAverageColor4, rightAverageColor5)
+        return ForeheadColor(
+            center: centerAverageColor,
+            left1: leftAverageColor1,
+            left2: leftAverageColor2,
+            left3: leftAverageColor3,
+            left4: leftAverageColor4,
+            left5: leftAverageColor5,
+            right1: rightAverageColor1,
+            right2: rightAverageColor2,
+            right3: rightAverageColor3,
+            right4: rightAverageColor4,
+            right5: rightAverageColor5
+        )
     }
 
-    func visualizeForeheadRegion(in ciImage: CIImage, with foreheadBounds: CGRect) -> UIImage? {
+    private func visualizeForeheadRegion(in ciImage: CIImage, with foreheadBounds: CGRect) -> UIImage? {
         let context = CIContext(options: nil)
 
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
@@ -432,62 +388,62 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Calculate the bounds for the left and right rectangles
         let leftBounds1 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 8),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 7),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds2 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 16),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 14),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds3 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 24),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 21),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds4 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 32),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 28),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let leftBounds5 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 40),
+            y: foreheadBoundsForUIImage.origin.y + (foreheadBoundsForUIImage.width + 35),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         
         let rightBounds1 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 8),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 7),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds2 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 16),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 14),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds3 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 24),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 21),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds4 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 32),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 28),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
         let rightBounds5 = CGRect(
             x: foreheadBoundsForUIImage.origin.x,
-            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 40),
+            y: foreheadBoundsForUIImage.origin.y - (foreheadBoundsForUIImage.width + 35),
             width: foreheadBoundsForUIImage.width,
             height: foreheadBoundsForUIImage.height
         )
@@ -511,5 +467,40 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         UIGraphicsEndImageContext()
 
         return newImage
+    }
+}
+
+// MARK: - Save Image
+extension ViewController {
+    private func saveImageToPhotoLibrary(image: UIImage) {
+        // First, we need to check for the photo library permission
+        let status = PHPhotoLibrary.authorizationStatus()
+        if (status == PHAuthorizationStatus.authorized) {
+            // Access has been granted.
+            saveImageToGallery(image: image)
+        }
+        else if (status == PHAuthorizationStatus.denied) {
+            // Access has been denied.
+            print("Access to photo library is denied.")
+        }
+        else if (status == PHAuthorizationStatus.notDetermined) {
+            // Access has not been determined.
+            PHPhotoLibrary.requestAuthorization({ (newStatus) in
+                if (newStatus == PHAuthorizationStatus.authorized) {
+                    self.saveImageToGallery(image: image)
+                }
+                else {
+                    print("Access to photo library is not determined.")
+                }
+            })
+        }
+        else if (status == PHAuthorizationStatus.restricted) {
+            // Restricted access - normally won't happen.
+            print("Access to photo library is restricted.")
+        }
+    }
+    
+    private func saveImageToGallery(image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
     }
 }
