@@ -21,6 +21,7 @@
 		AACF12EC2A17698B00F86B0D /* Lysina_FullHead.dae in Resources */ = {isa = PBXBuildFile; fileRef = AACF12E72A17698B00F86B0D /* Lysina_FullHead.dae */; };
 		AAD28EA72A44742700880EAB /* Forehead.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD28EA62A44742700880EAB /* Forehead.swift */; };
 		AAD28EA92A4475E900880EAB /* Phase_1.dae in Resources */ = {isa = PBXBuildFile; fileRef = AAD28EA82A4475E900880EAB /* Phase_1.dae */; };
+		AAD28EB12A4AC03E00880EAB /* alopecia_phase1_ios.scn in Resources */ = {isa = PBXBuildFile; fileRef = AAD28EB02A4AC03E00880EAB /* alopecia_phase1_ios.scn */; };
 		AAF7141A2A29DE5300F62800 /* Lysina_divided.dae in Resources */ = {isa = PBXBuildFile; fileRef = AAF714192A29DE5300F62800 /* Lysina_divided.dae */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 		AACF12E72A17698B00F86B0D /* Lysina_FullHead.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; path = Lysina_FullHead.dae; sourceTree = "<group>"; };
 		AAD28EA62A44742700880EAB /* Forehead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Forehead.swift; sourceTree = "<group>"; };
 		AAD28EA82A4475E900880EAB /* Phase_1.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; path = Phase_1.dae; sourceTree = "<group>"; };
+		AAD28EB02A4AC03E00880EAB /* alopecia_phase1_ios.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = alopecia_phase1_ios.scn; sourceTree = "<group>"; };
 		AAF714192A29DE5300F62800 /* Lysina_divided.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; path = Lysina_divided.dae; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -91,6 +93,7 @@
 		AA4A527C2A39B20900D81CF6 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				AAD28EB02A4AC03E00880EAB /* alopecia_phase1_ios.scn */,
 				AAD28EA82A4475E900880EAB /* Phase_1.dae */,
 				AA5E366D2A39F30E00E5C957 /* Phase_2.dae */,
 				AAF714192A29DE5300F62800 /* Lysina_divided.dae */,
@@ -174,6 +177,7 @@
 				AAF7141A2A29DE5300F62800 /* Lysina_divided.dae in Resources */,
 				AAD28EA92A4475E900880EAB /* Phase_1.dae in Resources */,
 				AA5E366E2A39F30E00E5C957 /* Phase_2.dae in Resources */,
+				AAD28EB12A4AC03E00880EAB /* alopecia_phase1_ios.scn in Resources */,
 				AA23D90C29F66E1600388353 /* Main.storyboard in Resources */,
 				AACF12EC2A17698B00F86B0D /* Lysina_FullHead.dae in Resources */,
 			);
