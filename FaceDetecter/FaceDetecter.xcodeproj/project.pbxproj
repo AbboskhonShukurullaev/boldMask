@@ -13,7 +13,6 @@
 		AA23D90C29F66E1600388353 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA23D90A29F66E1600388353 /* Main.storyboard */; };
 		AA23D90E29F66E1700388353 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA23D90D29F66E1700388353 /* Assets.xcassets */; };
 		AA23D91129F66E1700388353 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA23D90F29F66E1700388353 /* LaunchScreen.storyboard */; };
-		AA4A527B2A31D01900D81CF6 /* Lysina_alien.dae in Resources */ = {isa = PBXBuildFile; fileRef = AA4A527A2A31D01900D81CF6 /* Lysina_alien.dae */; };
 		AA4A527F2A39B26500D81CF6 /* UIView+renderedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4A527E2A39B26500D81CF6 /* UIView+renderedImage.swift */; };
 		AA4A52812A39B29800D81CF6 /* CIImage+dominantColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4A52802A39B29800D81CF6 /* CIImage+dominantColor.swift */; };
 		AA4A52832A39B2B900D81CF6 /* CIImage+averageColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4A52822A39B2B900D81CF6 /* CIImage+averageColor.swift */; };
@@ -30,7 +29,6 @@
 		AA23D90D29F66E1700388353 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA23D91029F66E1700388353 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AA23D91229F66E1700388353 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA4A527A2A31D01900D81CF6 /* Lysina_alien.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; path = Lysina_alien.dae; sourceTree = "<group>"; };
 		AA4A527E2A39B26500D81CF6 /* UIView+renderedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+renderedImage.swift"; sourceTree = "<group>"; };
 		AA4A52802A39B29800D81CF6 /* CIImage+dominantColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CIImage+dominantColor.swift"; sourceTree = "<group>"; };
 		AA4A52822A39B2B900D81CF6 /* CIImage+averageColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CIImage+averageColor.swift"; sourceTree = "<group>"; };
@@ -86,7 +84,6 @@
 			children = (
 				AAF714192A29DE5300F62800 /* Lysina_divided.dae */,
 				AACF12E72A17698B00F86B0D /* Lysina_FullHead.dae */,
-				AA4A527A2A31D01900D81CF6 /* Lysina_alien.dae */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -161,7 +158,6 @@
 			files = (
 				AA23D91129F66E1700388353 /* LaunchScreen.storyboard in Resources */,
 				AA23D90E29F66E1700388353 /* Assets.xcassets in Resources */,
-				AA4A527B2A31D01900D81CF6 /* Lysina_alien.dae in Resources */,
 				AAF7141A2A29DE5300F62800 /* Lysina_divided.dae in Resources */,
 				AA23D90C29F66E1600388353 /* Main.storyboard in Resources */,
 				AACF12EC2A17698B00F86B0D /* Lysina_FullHead.dae in Resources */,

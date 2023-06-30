@@ -99,7 +99,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }
     
     private func createHairNode() -> SCNNode {
-        guard let hairScene = SCNScene(named: "Lysina_alien.dae") else {
+        guard let hairScene = SCNScene(named: "Lysina_FullHead.dae") else {
             print("Failed to load hair model")
             return SCNNode()
         }
