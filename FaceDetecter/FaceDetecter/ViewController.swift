@@ -72,8 +72,7 @@ class ViewController: UIViewController {
         
         sceneView.session.run(configuration)
         
-        
-        hairNode = createHairNode()
+        addHairNode()
     }
     
     @objc private func buttonTapped() {
@@ -124,7 +123,7 @@ extension ViewController: ARSCNViewDelegate {
             hairNode.scale = SCNVector3(0.011, 0.011, 0.011)
 
             // Check if three seconds have passed since the last update
-            if let lastUpdated = lastUpdated, Date().timeIntervalSince(lastUpdated) < 3 {
+            if let lastUpdated = lastUpdated, Date().timeIntervalSince(lastUpdated) < 1.5 {
                 return
             }
 
@@ -135,13 +134,16 @@ extension ViewController: ARSCNViewDelegate {
             if let pixelBuffer = sceneView.session.currentFrame?.capturedImage {
                 
                 drawMaskSegments(from: pixelBuffer, for: hairNode)
-
-                sceneView.scene.rootNode.addChildNode(hairNode)
             }
 
         } else {
             print("NO NODE")
         }
+    }
+    
+    private func addHairNode() {
+        hairNode = createHairNode()
+        sceneView.scene.rootNode.addChildNode(hairNode!)
     }
     
     private func createHairNode() -> SCNNode {
@@ -173,6 +175,53 @@ extension ViewController: ARSCNViewDelegate {
 
         return hairNode
     }
+    
+    func image(from colors: [UIColor], size: CGSize = CGSize(width: 1, height: 1)) -> UIImage {
+        let rect = CGRect(origin: .zero, size: size)
+        UIGraphicsBeginImageContextWithOptions(rect.size, false, 0.0)
+        guard let context = UIGraphicsGetCurrentContext() else { return UIImage() }
+        let colorWidth = rect.width / CGFloat(colors.count)
+        for (index, color) in colors.enumerated() {
+            color.setFill()
+            let stripeRect = CGRect(x: CGFloat(index) * colorWidth, y: 0, width: colorWidth, height: rect.height)
+            context.fill(stripeRect)
+        }
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image ?? UIImage()
+    }
+
+    
+    private func applyColorChange(to node: SCNNode, withColor color: UIColor, duration: TimeInterval) {
+        let colorChangeAction = SCNAction.customAction(duration: duration) { (node, elapsedTime) in
+            let percentage = elapsedTime / CGFloat(duration)
+            if let initialColor = node.geometry?.firstMaterial?.diffuse.contents as? UIColor {
+                let newColor = self.interpolate(from: initialColor, to: color, percentage: percentage)
+                node.geometry?.firstMaterial?.diffuse.contents = newColor
+            }
+        }
+        node.runAction(colorChangeAction)
+    }
+
+    private func interpolate(from: UIColor, to: UIColor, percentage: CGFloat) -> UIColor {
+        var fromRed: CGFloat = 0, fromGreen: CGFloat = 0, fromBlue: CGFloat = 0, fromAlpha: CGFloat = 0
+        from.getRed(&fromRed, green: &fromGreen, blue: &fromBlue, alpha: &fromAlpha)
+
+        var toRed: CGFloat = 0, toGreen: CGFloat = 0, toBlue: CGFloat = 0, toAlpha: CGFloat = 0
+        to.getRed(&toRed, green: &toGreen, blue: &toBlue, alpha: &toAlpha)
+
+        return UIColor(
+            red: self.lerp(fromRed, toRed, percentage),
+            green: self.lerp(fromGreen, toGreen, percentage),
+            blue: self.lerp(fromBlue, toBlue, percentage),
+            alpha: self.lerp(fromAlpha, toAlpha, percentage)
+        )
+    }
+
+    private func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat {
+        return a + (b - a) * t
+    }
+
 
     private func drawMaskSegments(from pixelBuffer: CVPixelBuffer, for hairNode: SCNNode) {
         let foreheadColors = getAverageSkinColor(from: pixelBuffer)
@@ -205,7 +254,7 @@ extension ViewController: ARSCNViewDelegate {
                     case .right5:
                         color = foreheadColors.right5
                     }
-                    matchingNode.geometry?.firstMaterial?.diffuse.contents = color
+                    applyColorChange(to: matchingNode, withColor: color, duration: 1.5)
                 } else {
                     print("Node with name \(forehead.rawValue) found, but not located in the 3D model.")
                 }
@@ -502,5 +551,37 @@ extension ViewController {
     
     private func saveImageToGallery(image: UIImage) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+    }
+}
+
+extension UIView {
+    func snapshotImage() -> UIImage {
+        UIGraphicsBeginImageContext(self.frame.size)
+        self.layer.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image!
+    }
+}
+
+extension UIColor {
+    func toGradientColor(_ size: CGSize = CGSize(width: 100, height: 100)) -> UIColor {
+        var gradientColor: UIColor!
+        
+        DispatchQueue.main.sync {
+            let view = UIView(frame: CGRect(origin: .zero, size: size))
+            
+            let gradientLayer = CAGradientLayer()
+            gradientLayer.frame = view.bounds
+            gradientLayer.colors = [self.cgColor, UIColor.clear.cgColor]
+            gradientLayer.locations = [0.0, 1.0]
+            
+            view.layer.addSublayer(gradientLayer)
+            
+            let gradientImage = view.snapshotImage()
+            gradientColor = UIColor(patternImage: gradientImage)
+        }
+        
+        return gradientColor
     }
 }
