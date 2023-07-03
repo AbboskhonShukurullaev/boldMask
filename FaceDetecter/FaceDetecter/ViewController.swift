@@ -147,7 +147,7 @@ extension ViewController: ARSCNViewDelegate {
     }
     
     private func createHairNode() -> SCNNode {
-        guard let hairScene = SCNScene(named: "Phase_1.dae") else {
+        guard let hairScene = SCNScene(named: "Spots_outline.dae") else {
             print("Failed to load hair model")
             return SCNNode()
         }
@@ -225,43 +225,33 @@ extension ViewController: ARSCNViewDelegate {
 
     private func drawMaskSegments(from pixelBuffer: CVPixelBuffer, for hairNode: SCNNode) {
         let foreheadColors = getAverageSkinColor(from: pixelBuffer)
+
+        let spotMaterial = SCNMaterial()
+        spotMaterial.diffuse.contents = foreheadColors.center
         
-        for forehead in Forehead.allCases {
-            if hairNodes.contains(forehead.rawValue) {
-                if let matchingNode = hairNode.childNode(withName: forehead.rawValue, recursively: true) {
-                    let color: UIColor
-                    switch forehead {
-                    case .top:
-                        color = foreheadColors.center
-                    case .left1:
-                        color = foreheadColors.left1
-                    case .left2:
-                        color = foreheadColors.left2
-                    case .left3:
-                        color = foreheadColors.left3
-                    case .left4:
-                        color = foreheadColors.left4
-                    case .left5:
-                        color = foreheadColors.left5
-                    case .right1:
-                        color = foreheadColors.right1
-                    case .right2:
-                        color = foreheadColors.right2
-                    case .right3:
-                        color = foreheadColors.right3
-                    case .right4:
-                        color = foreheadColors.right4
-                    case .right5:
-                        color = foreheadColors.right5
-                    }
-                    applyColorChange(to: matchingNode, withColor: color, duration: 1.5)
-                } else {
-                    print("Node with name \(forehead.rawValue) found, but not located in the 3D model.")
-                }
-            } else {
-                print("\(forehead.rawValue) not found in hairNodes")
-            }
-        }
+        let spotMaterialAlpha1 = SCNMaterial()
+        spotMaterialAlpha1.diffuse.contents = foreheadColors.center.withAlphaComponent(0.75)
+        
+        let spotMaterialAlpha2 = SCNMaterial()
+        spotMaterialAlpha2.diffuse.contents = foreheadColors.center.withAlphaComponent(0.4)
+        
+        let foreheadNode = hairNode.childNode(withName: "Spot1", recursively: true)
+        foreheadNode?.geometry?.firstMaterial = spotMaterial
+        
+        let foreheadNode1 = hairNode.childNode(withName: "Spot1_o1", recursively: true)
+        foreheadNode1?.geometry?.firstMaterial = spotMaterialAlpha1
+        
+        let foreheadNode2 = hairNode.childNode(withName: "Spot1_o2", recursively: true)
+        foreheadNode2?.geometry?.firstMaterial = spotMaterialAlpha2
+        
+        let leftForeheadNode = hairNode.childNode(withName: "Spot2", recursively: true)
+        leftForeheadNode?.geometry?.firstMaterial = spotMaterial
+        
+        let leftForeheadNode1 = hairNode.childNode(withName: "Spot2_o1", recursively: true)
+        leftForeheadNode1?.geometry?.firstMaterial = spotMaterialAlpha1
+        
+        let leftForeheadNode2 = hairNode.childNode(withName: "Spot2_o2", recursively: true)
+        leftForeheadNode2?.geometry?.firstMaterial = spotMaterialAlpha2
     }
     
     private func getAverageSkinColor(from pixelBuffer: CVPixelBuffer) -> (ForeheadColor) {
