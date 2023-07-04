@@ -25,6 +25,7 @@ class ViewController: UIViewController {
     private let sceneView: ARSCNView = {
         let sceneView = ARSCNView()
         sceneView.translatesAutoresizingMaskIntoConstraints = false
+        sceneView.autoenablesDefaultLighting = false
         return sceneView
     }()
     
@@ -123,7 +124,7 @@ extension ViewController: ARSCNViewDelegate {
             hairNode.scale = SCNVector3(0.011, 0.011, 0.011)
 
             // Check if three seconds have passed since the last update
-            if let lastUpdated = lastUpdated, Date().timeIntervalSince(lastUpdated) < 1.5 {
+            if let lastUpdated = lastUpdated, Date().timeIntervalSince(lastUpdated) < 1.0 {
                 return
             }
 
@@ -193,14 +194,27 @@ extension ViewController: ARSCNViewDelegate {
 
     
     private func applyColorChange(to node: SCNNode, withColor color: UIColor, duration: TimeInterval) {
-        let colorChangeAction = SCNAction.customAction(duration: duration) { (node, elapsedTime) in
+        let colorChangeAction = SCNAction.customAction(duration: duration) { [weak self] (node, elapsedTime) in
+            guard let self = self else { return }
+            
             let percentage = elapsedTime / CGFloat(duration)
             if let initialColor = node.geometry?.firstMaterial?.diffuse.contents as? UIColor {
                 let newColor = self.interpolate(from: initialColor, to: color, percentage: percentage)
                 node.geometry?.firstMaterial?.diffuse.contents = newColor
+                
+                self.applyLight(to: node, color: newColor, intensity: 300)
             }
         }
         node.runAction(colorChangeAction)
+    }
+    
+    private func applyLight(to node: SCNNode, color: UIColor, intensity: CGFloat) {
+        let light = SCNLight()
+        light.type = .probe
+        light.color = color
+        light.intensity = intensity
+        
+        node.light = light
     }
 
     private func interpolate(from: UIColor, to: UIColor, percentage: CGFloat) -> UIColor {
@@ -225,33 +239,48 @@ extension ViewController: ARSCNViewDelegate {
 
     private func drawMaskSegments(from pixelBuffer: CVPixelBuffer, for hairNode: SCNNode) {
         let foreheadColors = getAverageSkinColor(from: pixelBuffer)
-
+        let centerColor = foreheadColors.center
+        
         let spotMaterial = SCNMaterial()
-        spotMaterial.diffuse.contents = foreheadColors.center
-        
-        let spotMaterialAlpha1 = SCNMaterial()
-        spotMaterialAlpha1.diffuse.contents = foreheadColors.center.withAlphaComponent(0.75)
-        
-        let spotMaterialAlpha2 = SCNMaterial()
-        spotMaterialAlpha2.diffuse.contents = foreheadColors.center.withAlphaComponent(0.4)
+        spotMaterial.diffuse.contents = centerColor
+        spotMaterial.lightingModel = .lambert
         
         let foreheadNode = hairNode.childNode(withName: "Spot1", recursively: true)
         foreheadNode?.geometry?.firstMaterial = spotMaterial
+        foreheadNode?.opacity = 1.0
+        foreheadNode?.castsShadow = false
         
         let foreheadNode1 = hairNode.childNode(withName: "Spot1_o1", recursively: true)
-        foreheadNode1?.geometry?.firstMaterial = spotMaterialAlpha1
+        foreheadNode1?.geometry?.firstMaterial = spotMaterial
+        foreheadNode1?.opacity = 0.75
+        foreheadNode1?.castsShadow = false
         
         let foreheadNode2 = hairNode.childNode(withName: "Spot1_o2", recursively: true)
-        foreheadNode2?.geometry?.firstMaterial = spotMaterialAlpha2
+        foreheadNode2?.geometry?.firstMaterial = spotMaterial
+        foreheadNode2?.opacity = 0.5
+        foreheadNode2?.castsShadow = false
         
         let leftForeheadNode = hairNode.childNode(withName: "Spot2", recursively: true)
         leftForeheadNode?.geometry?.firstMaterial = spotMaterial
+        leftForeheadNode?.opacity = 1.0
+        leftForeheadNode?.castsShadow = false
         
         let leftForeheadNode1 = hairNode.childNode(withName: "Spot2_o1", recursively: true)
-        leftForeheadNode1?.geometry?.firstMaterial = spotMaterialAlpha1
+        leftForeheadNode1?.geometry?.firstMaterial = spotMaterial
+        leftForeheadNode1?.opacity = 0.75
+        leftForeheadNode1?.castsShadow = false
         
         let leftForeheadNode2 = hairNode.childNode(withName: "Spot2_o2", recursively: true)
-        leftForeheadNode2?.geometry?.firstMaterial = spotMaterialAlpha2
+        leftForeheadNode2?.geometry?.firstMaterial = spotMaterial
+        leftForeheadNode2?.opacity = 0.5
+        leftForeheadNode2?.castsShadow = false
+        
+        applyColorChange(to: foreheadNode!, withColor: centerColor, duration: 1.0)
+        applyColorChange(to: foreheadNode1!, withColor: centerColor, duration: 1.0)
+        applyColorChange(to: foreheadNode2!, withColor: centerColor, duration: 1.0)
+        applyColorChange(to: leftForeheadNode!, withColor: centerColor, duration: 1.0)
+        applyColorChange(to: leftForeheadNode1!, withColor: centerColor, duration: 1.0)
+        applyColorChange(to: leftForeheadNode2!, withColor: centerColor, duration: 1.0)
     }
     
     private func getAverageSkinColor(from pixelBuffer: CVPixelBuffer) -> (ForeheadColor) {
@@ -273,7 +302,7 @@ extension ViewController: ARSCNViewDelegate {
                                 height: firstFace.boundingBox.size.height * ciImage.extent.size.height)
 
         let centerForeheadBounds = CGRect(
-            x: faceBounds.origin.x - (faceBounds.height / 24),
+            x: faceBounds.origin.x - (faceBounds.height / 30),
             y: faceBounds.origin.y + (faceBounds.width / 2),
             width: faceBounds.width / 18,
             height: faceBounds.height / 18)
