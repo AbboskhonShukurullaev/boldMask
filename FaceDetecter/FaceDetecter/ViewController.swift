@@ -236,51 +236,54 @@ extension ViewController: ARSCNViewDelegate {
         return a + (b - a) * t
     }
 
+    private func spotMaterial(with color: UIColor) -> SCNMaterial {
+        let spotMaterial = SCNMaterial()
+        spotMaterial.diffuse.contents = color
+        spotMaterial.lightingModel = .lambert
+
+        return spotMaterial
+    }
+    
+    private func configureNode(node: SCNNode, material: SCNMaterial, opacity: CGFloat) {
+        node.geometry?.firstMaterial = material
+        node.opacity = opacity
+        node.castsShadow = false
+    }
 
     private func drawMaskSegments(from pixelBuffer: CVPixelBuffer, for hairNode: SCNNode) {
         let foreheadColors = getAverageSkinColor(from: pixelBuffer)
         let centerColor = foreheadColors.center
+        let spotMaterial = spotMaterial(with: centerColor)
         
-        let spotMaterial = SCNMaterial()
-        spotMaterial.diffuse.contents = centerColor
-        spotMaterial.lightingModel = .lambert
+        if let foreheadNode = hairNode.childNode(withName: "Spot1", recursively: true) {
+            configureNode(node: foreheadNode, material: spotMaterial, opacity: 1.0)
+            applyColorChange(to: foreheadNode, withColor: centerColor, duration: 1.0)
+        }
         
-        let foreheadNode = hairNode.childNode(withName: "Spot1", recursively: true)
-        foreheadNode?.geometry?.firstMaterial = spotMaterial
-        foreheadNode?.opacity = 1.0
-        foreheadNode?.castsShadow = false
+        if let foreheadNode1 = hairNode.childNode(withName: "Spot1_o1", recursively: true) {
+            configureNode(node: foreheadNode1, material: spotMaterial, opacity: 0.75)
+            applyColorChange(to: foreheadNode1, withColor: centerColor, duration: 1.0)
+        }
         
-        let foreheadNode1 = hairNode.childNode(withName: "Spot1_o1", recursively: true)
-        foreheadNode1?.geometry?.firstMaterial = spotMaterial
-        foreheadNode1?.opacity = 0.75
-        foreheadNode1?.castsShadow = false
+        if let foreheadNode2 = hairNode.childNode(withName: "Spot1_o2", recursively: true) {
+            configureNode(node: foreheadNode2, material: spotMaterial, opacity: 0.5)
+            applyColorChange(to: foreheadNode2, withColor: centerColor, duration: 1.0)
+        }
         
-        let foreheadNode2 = hairNode.childNode(withName: "Spot1_o2", recursively: true)
-        foreheadNode2?.geometry?.firstMaterial = spotMaterial
-        foreheadNode2?.opacity = 0.5
-        foreheadNode2?.castsShadow = false
+        if let leftForeheadNode = hairNode.childNode(withName: "Spot2", recursively: true) {
+            configureNode(node: leftForeheadNode, material: spotMaterial, opacity: 1.0)
+            applyColorChange(to: leftForeheadNode, withColor: centerColor, duration: 1.0)
+        }
         
-        let leftForeheadNode = hairNode.childNode(withName: "Spot2", recursively: true)
-        leftForeheadNode?.geometry?.firstMaterial = spotMaterial
-        leftForeheadNode?.opacity = 1.0
-        leftForeheadNode?.castsShadow = false
+        if let leftForeheadNode1 = hairNode.childNode(withName: "Spot2_o1", recursively: true) {
+            configureNode(node: leftForeheadNode1, material: spotMaterial, opacity: 0.75)
+            applyColorChange(to: leftForeheadNode1, withColor: centerColor, duration: 1.0)
+        }
         
-        let leftForeheadNode1 = hairNode.childNode(withName: "Spot2_o1", recursively: true)
-        leftForeheadNode1?.geometry?.firstMaterial = spotMaterial
-        leftForeheadNode1?.opacity = 0.75
-        leftForeheadNode1?.castsShadow = false
-        
-        let leftForeheadNode2 = hairNode.childNode(withName: "Spot2_o2", recursively: true)
-        leftForeheadNode2?.geometry?.firstMaterial = spotMaterial
-        leftForeheadNode2?.opacity = 0.5
-        leftForeheadNode2?.castsShadow = false
-        
-        applyColorChange(to: foreheadNode!, withColor: centerColor, duration: 1.0)
-        applyColorChange(to: foreheadNode1!, withColor: centerColor, duration: 1.0)
-        applyColorChange(to: foreheadNode2!, withColor: centerColor, duration: 1.0)
-        applyColorChange(to: leftForeheadNode!, withColor: centerColor, duration: 1.0)
-        applyColorChange(to: leftForeheadNode1!, withColor: centerColor, duration: 1.0)
-        applyColorChange(to: leftForeheadNode2!, withColor: centerColor, duration: 1.0)
+        if let leftForeheadNode2 = hairNode.childNode(withName: "Spot2_o2", recursively: true) {
+            configureNode(node: leftForeheadNode2, material: spotMaterial, opacity: 0.5)
+            applyColorChange(to: leftForeheadNode2, withColor: centerColor, duration: 1.0)
+        }
     }
     
     private func getAverageSkinColor(from pixelBuffer: CVPixelBuffer) -> (ForeheadColor) {
