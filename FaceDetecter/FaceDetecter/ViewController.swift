@@ -148,7 +148,7 @@ extension ViewController: ARSCNViewDelegate {
     }
     
     private func createHairNode() -> SCNNode {
-        guard let hairScene = SCNScene(named: "Spots_outline.dae") else {
+        guard let hairScene = SCNScene(named: "Phase2.dae") else {
             print("Failed to load hair model")
             return SCNNode()
         }
@@ -255,34 +255,28 @@ extension ViewController: ARSCNViewDelegate {
         let centerColor = foreheadColors.center
         let spotMaterial = spotMaterial(with: centerColor)
         
-        if let foreheadNode = hairNode.childNode(withName: "Spot1", recursively: true) {
-            configureNode(node: foreheadNode, material: spotMaterial, opacity: 1.0)
-            applyColorChange(to: foreheadNode, withColor: centerColor, duration: 1.0)
-        }
-        
-        if let foreheadNode1 = hairNode.childNode(withName: "Spot1_o1", recursively: true) {
-            configureNode(node: foreheadNode1, material: spotMaterial, opacity: 0.75)
-            applyColorChange(to: foreheadNode1, withColor: centerColor, duration: 1.0)
-        }
-        
-        if let foreheadNode2 = hairNode.childNode(withName: "Spot1_o2", recursively: true) {
-            configureNode(node: foreheadNode2, material: spotMaterial, opacity: 0.5)
-            applyColorChange(to: foreheadNode2, withColor: centerColor, duration: 1.0)
-        }
-        
-        if let leftForeheadNode = hairNode.childNode(withName: "Spot2", recursively: true) {
-            configureNode(node: leftForeheadNode, material: spotMaterial, opacity: 1.0)
-            applyColorChange(to: leftForeheadNode, withColor: centerColor, duration: 1.0)
-        }
-        
-        if let leftForeheadNode1 = hairNode.childNode(withName: "Spot2_o1", recursively: true) {
-            configureNode(node: leftForeheadNode1, material: spotMaterial, opacity: 0.75)
-            applyColorChange(to: leftForeheadNode1, withColor: centerColor, duration: 1.0)
-        }
-        
-        if let leftForeheadNode2 = hairNode.childNode(withName: "Spot2_o2", recursively: true) {
-            configureNode(node: leftForeheadNode2, material: spotMaterial, opacity: 0.5)
-            applyColorChange(to: leftForeheadNode2, withColor: centerColor, duration: 1.0)
+        for hairString in hairNodes {
+            if hairString.hasSuffix("_r1") {
+                if let foreheadNode1 = hairNode.childNode(withName: hairString, recursively: true) {
+                    configureNode(node: foreheadNode1, material: spotMaterial, opacity: 0.8)
+                    applyColorChange(to: foreheadNode1, withColor: centerColor, duration: 1.0)
+                }
+            } else if hairString.hasSuffix("_r2") {
+                if let foreheadNode2 = hairNode.childNode(withName: hairString, recursively: true) {
+                    configureNode(node: foreheadNode2, material: spotMaterial, opacity: 0.6)
+                    applyColorChange(to: foreheadNode2, withColor: centerColor, duration: 1.0)
+                }
+            } else if hairString.hasSuffix("_r3") {
+                if let foreheadNode3 = hairNode.childNode(withName: hairString, recursively: true) {
+                    configureNode(node: foreheadNode3, material: spotMaterial, opacity: 0.4)
+                    applyColorChange(to: foreheadNode3, withColor: centerColor, duration: 1.0)
+                }
+            } else {
+                if let foreheadNode = hairNode.childNode(withName: hairString, recursively: true) {
+                    configureNode(node: foreheadNode, material: spotMaterial, opacity: 1.0)
+                    applyColorChange(to: foreheadNode, withColor: centerColor, duration: 1.0)
+                }
+            }
         }
     }
     
