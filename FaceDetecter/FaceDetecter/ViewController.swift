@@ -8,9 +8,8 @@
 import UIKit
 import ARKit
 import SceneKit
-import Vision
-import CoreImage
 import Photos
+import RealityKit
 
 
 class ViewController: UIViewController {
@@ -124,7 +123,7 @@ extension ViewController: ARSCNViewDelegate {
             hairNode.scale = SCNVector3(0.011, 0.011, 0.011)
 
             // Check if three seconds have passed since the last update
-            if let lastUpdated = lastUpdated, Date().timeIntervalSince(lastUpdated) < 1.0 {
+            if let lastUpdated = lastUpdated, Date().timeIntervalSince(lastUpdated) < 1.5 {
                 return
             }
 
@@ -148,7 +147,7 @@ extension ViewController: ARSCNViewDelegate {
     }
     
     private func createHairNode() -> SCNNode {
-        guard let hairScene = SCNScene(named: "Phase2.dae") else {
+        guard let hairScene = SCNScene(named: "Phase1.dae") else {
             print("Failed to load hair model")
             return SCNNode()
         }
@@ -244,6 +243,45 @@ extension ViewController: ARSCNViewDelegate {
         return spotMaterial
     }
     
+    
+    private func textureMaterial(image: UIImage, color: UIColor) -> SCNMaterial {
+        let spotMaterial = SCNMaterial()
+        spotMaterial.diffuse.contents = image
+        spotMaterial.diffuse.intensity = 1.0
+        spotMaterial.diffuse.contentsTransform = SCNMatrix4MakeScale(1.0, 1.0, 0.0)
+        spotMaterial.diffuse.wrapS = .repeat
+        spotMaterial.diffuse.wrapT = .repeat
+
+        var red: CGFloat = 0.0, green: CGFloat = 0.0, blue: CGFloat = 0.0, alpha: CGFloat = 0.0
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+
+        let width = Int(image.size.width)
+        let height = Int(image.size.height)
+
+        UIGraphicsBeginImageContextWithOptions(image.size, false, image.scale)
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return spotMaterial
+        }
+
+        image.draw(at: .zero)
+
+        let colorRect = CGRect(x: 0, y: 0, width: width, height: height)
+        context.setFillColor(red: red, green: green, blue: blue, alpha: alpha)
+        context.setBlendMode(.sourceAtop)
+        context.fill(colorRect)
+
+        guard let blendedImage = UIGraphicsGetImageFromCurrentImageContext() else {
+            UIGraphicsEndImageContext()
+            return spotMaterial
+        }
+
+        UIGraphicsEndImageContext()
+
+        spotMaterial.diffuse.contents = blendedImage
+
+        return spotMaterial
+    }
+
     private func configureNode(node: SCNNode, material: SCNMaterial, opacity: CGFloat) {
         node.geometry?.firstMaterial = material
         node.opacity = opacity
@@ -253,29 +291,17 @@ extension ViewController: ARSCNViewDelegate {
     private func drawMaskSegments(from pixelBuffer: CVPixelBuffer, for hairNode: SCNNode) {
         let foreheadColors = getAverageSkinColor(from: pixelBuffer)
         let centerColor = foreheadColors.center
-        let spotMaterial = spotMaterial(with: centerColor)
+        //let spotMaterial = spotMaterial(with: centerColor)
+        let textureMaterial = textureMaterial(
+            image: UIImage(named: "Phase1_Texture_256_customDots")!,
+            color: centerColor
+        )
+        
         
         for hairString in hairNodes {
-            if hairString.hasSuffix("_r1") {
-                if let foreheadNode1 = hairNode.childNode(withName: hairString, recursively: true) {
-                    configureNode(node: foreheadNode1, material: spotMaterial, opacity: 0.8)
-                    applyColorChange(to: foreheadNode1, withColor: centerColor, duration: 1.0)
-                }
-            } else if hairString.hasSuffix("_r2") {
-                if let foreheadNode2 = hairNode.childNode(withName: hairString, recursively: true) {
-                    configureNode(node: foreheadNode2, material: spotMaterial, opacity: 0.6)
-                    applyColorChange(to: foreheadNode2, withColor: centerColor, duration: 1.0)
-                }
-            } else if hairString.hasSuffix("_r3") {
-                if let foreheadNode3 = hairNode.childNode(withName: hairString, recursively: true) {
-                    configureNode(node: foreheadNode3, material: spotMaterial, opacity: 0.4)
-                    applyColorChange(to: foreheadNode3, withColor: centerColor, duration: 1.0)
-                }
-            } else {
-                if let foreheadNode = hairNode.childNode(withName: hairString, recursively: true) {
-                    configureNode(node: foreheadNode, material: spotMaterial, opacity: 1.0)
-                    applyColorChange(to: foreheadNode, withColor: centerColor, duration: 1.0)
-                }
+            if let foreheadNode = hairNode.childNode(withName: hairString, recursively: true) {
+                configureNode(node: foreheadNode, material: textureMaterial, opacity: 2.0)
+                applyColorChange(to: foreheadNode, withColor: centerColor, duration: 1.5)
             }
         }
     }
@@ -599,5 +625,50 @@ extension UIColor {
         }
         
         return gradientColor
+    }
+}
+
+extension UIImage {
+    func getPixelColor(at point: CGPoint) -> UIColor {
+        guard let imageCG = cgImage else { return UIColor.clear }
+        let pixelData = imageCG.dataProvider?.data
+        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        let pixelInfo: Int = ((Int(imageCG.width) * Int(point.y)) + Int(point.x)) * 4
+
+        let r = CGFloat(data[pixelInfo]) / 255.0
+        let g = CGFloat(data[pixelInfo + 1]) / 255.0
+        let b = CGFloat(data[pixelInfo + 2]) / 255.0
+        let a = CGFloat(data[pixelInfo + 3]) / 255.0
+
+        return UIColor(red: r, green: g, blue: b, alpha: a)
+    }
+}
+
+extension UIColor {
+    func isWhiteOrClose() -> Bool {
+        guard let components = cgColor.components else { return false }
+        let r = components[0]
+        let g = components[1]
+        let b = components[2]
+
+        // Check if the color is white or close to white
+        return r > 0.9 && g > 0.9 && b > 0.9
+    }
+}
+
+extension UIColor {
+    static func blendColors(color1: UIColor, color2: UIColor) -> UIColor {
+        var r1: CGFloat = 0.0, g1: CGFloat = 0.0, b1: CGFloat = 0.0, a1: CGFloat = 0.0
+        var r2: CGFloat = 0.0, g2: CGFloat = 0.0, b2: CGFloat = 0.0, a2: CGFloat = 0.0
+        
+        color1.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        color2.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        
+        let r = (1 - a2) * r1 + a2 * r2
+        let g = (1 - a2) * g1 + a2 * g2
+        let b = (1 - a2) * b1 + a2 * b2
+        let a = a1
+        
+        return UIColor(red: r, green: g, blue: b, alpha: a)
     }
 }
